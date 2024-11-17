@@ -1,0 +1,142 @@
+Map<String, Boolean> moduleStates = new HashMap<>();
+String[] colorOptions = {"Red", "Blue", "Green", "Yellow", "Purple", "White", "Gray", "Black", "HelloKitty", "WaterMelon", "Trans", "custom"}; 
+String selectedColor = "Purple";
+String ToggleAlert = "CustomAlert";
+String Colorr = "&d";
+boolean tagEnabled = true;
+boolean soundEnabled = false;
+boolean messagesEnabled = true;
+
+void onLoad() {
+    String[] trackedModules = {"KillAura", "Scaffold", "Bhop", "BedAura", "Example"};
+    for (String module : trackedModules) {
+        moduleStates.put(module, modules.isEnabled(module));
+    }
+
+    modules.registerSlider("Message Color", "Choose the message color", 8, colorOptions);
+    modules.registerButton("Enable [TA] Tag", tagEnabled);
+    modules.registerButton("Enable Sound", soundEnabled);
+    modules.registerButton("Disable Messages", !messagesEnabled);
+}
+
+void onPreUpdate() {
+    int colorSliderValue = (int) modules.getSlider(scriptName, "Message Color");
+    selectedColor = colorOptions[colorSliderValue];
+    
+    tagEnabled = modules.getButton(scriptName, "Enable [TA] Tag");
+    soundEnabled = modules.getButton(scriptName, "Enable Sound");
+    messagesEnabled = !modules.getButton(scriptName, "Disable Messages");
+
+    for (Map.Entry<String, Boolean> entry : moduleStates.entrySet()) {
+        String moduleName = entry.getKey();
+        boolean lastState = entry.getValue();
+        boolean currentState = modules.isEnabled(moduleName);
+
+        if (currentState != lastState) {
+            if (soundEnabled) {
+                playSound();
+            }
+
+            if (messagesEnabled) {
+                String message = (tagEnabled ? getTag() + " " : "") + colorize(moduleName) + " " + (currentState ? "&aON" : "&cOFF");
+                client.print(message);
+            }
+
+            moduleStates.put(moduleName, currentState);
+        }
+    }
+}
+
+String colorize(String moduleName) {
+    String colorCode;
+    switch (selectedColor) {
+        case "Red": colorCode = "&c"; break;
+        case "Blue": colorCode = "&9"; break;
+        case "Green": colorCode = "&a"; break;
+        case "Yellow": colorCode = "&e"; break;
+        case "Purple": colorCode = "&d"; break;
+        case "White": colorCode = "&f"; break;
+        case "Gray": colorCode = "&7"; break;
+        case "Black": colorCode = "&8"; break;            
+        case "Trans": colorCode = "&b&d&f"; break;    
+        case "HelloKitty": colorCode = "&f"; break;   
+        case "WaterMelon": colorCode = "&c"; break; 
+        case "custom": colorCode = Colorr; break;
+        default: colorCode = "&f"; break;
+    }
+    return colorCode + moduleName;
+}
+
+String getTag() {
+    String tag;
+    switch (selectedColor) {
+        case "Red": tag = "&4[&cTA&4]&c"; break;
+        case "Blue": tag = "&1[&9TA&1]&9"; break;
+        case "Green": tag = "&2[&aTA&2]&a"; break;
+        case "Yellow": tag = "&6[&eTA&6]&e"; break;
+        case "Purple": tag = "&5[&dTA&5]&d"; break;
+        case "White": tag = "&7[&fTA&7]&f"; break;
+        case "Gray": tag = "&0[&7TA&0]&7"; break;
+        case "Black": tag = "&0[&8TA&0]&8"; break;             
+        case "Trans": tag = "&b[&dTA&b]&f"; break; 
+        case "HelloKitty": tag = "&d[&fTA&d]&f"; break;    
+        case "WaterMelon": tag = "&a[&cTA&a]&c"; break;    
+        case "custom": tag = ToggleAlert; break;    
+        default: tag = "&7[&fTA&7]&f"; break;
+    }
+    return tag;
+}
+
+void playSound() {
+    client.playSound("gui.button.press", 1.0f, 1.0f);
+}
+
+boolean onPacketSent(CPacket packet) {
+    if (packet instanceof C01) {
+        C01 c01 = (C01) packet;
+        
+        if (c01.message.startsWith("/tahelp") || c01.message.startsWith("/tah") || c01.message.startsWith("/hawktuah") || c01.message.startsWith("/toggealerthelp")) {
+            client.print("&fTo change the text (default is &5[&dTA&5]&f), do &d/ca&f <&cyour text&f> (use minecraft colour codes for colours).");
+            client.print("----------------------------------------");            
+            client.print("&fTo change the module text colour (default is pink), do &d/cc&f <&cminecraft colour code&f>");
+            client.print("----------------------------------------"); 
+            client.print("&fFor a colour codes list do &d/mcc&f or just search it up on google retard");             
+            return false;
+        }        
+
+        if (c01.message.startsWith("/cc") || c01.message.startsWith("/CustomColor") || c01.message.startsWith("/customcolor")) {
+            String[] parts = c01.message.split(" ");
+            Colorr = parts[1];
+            client.print("&dColour set to " + Colorr);
+            return false;
+        }
+        
+        if (c01.message.startsWith("/mcc") || c01.message.startsWith("/minecraftcolorcodes") || c01.message.startsWith("/MinecraftColourCodes")) {
+            client.print("&0Black &f=&0 0");
+            client.print("&1Dark Blue &f=&1 1"); 
+            client.print("&2Dark Green &f=&2 2"); 
+            client.print("&3Dark Aqua &f=&3 3"); 
+            client.print("&4Dark Red &f=&4 4"); 
+            client.print("&5Dark Purple &f=&5 5"); 
+            client.print("&6Gold &f=&6 6"); 
+            client.print("&7Gray &f=&7 7"); 
+            client.print("&8Dark Gray &f=&8 8"); 
+            client.print("&9Blue &f=&9 9");
+            client.print("&aGreen &f=&a a");
+            client.print("&bAqua &f=&b b");
+            client.print("&cRed &f=&c c");
+            client.print("&dPink &f=&d d");
+            client.print("&eYellow &f=&e e");
+            client.print("&fWhite &f=&f f");
+            return false;
+        }
+        
+        if (c01.message.startsWith("/ca") || c01.message.startsWith("/CustomAlert") || c01.message.startsWith("/customalert")) {
+            String[] parts = c01.message.split(" ");
+            ToggleAlert = parts[1];
+            client.print("&dAlert set to " + ToggleAlert);            
+            return false;
+        }
+    }
+    return true;
+}
